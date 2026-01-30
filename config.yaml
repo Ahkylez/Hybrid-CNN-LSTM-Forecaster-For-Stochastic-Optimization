@@ -1,0 +1,26 @@
+data:
+  tickers: ["AMZN"]
+  target_ticker: "AMZN"
+  interval: "1d"
+  period: "3y"
+  train_split: 0.70
+  val_split: 0.15
+
+features:
+  rsi_period: 14
+  macd_fast: 12
+  macd_slow: 26
+  macd_signal: 9
+  bb_period: 20
+  bb_std: 2
+  sma_windows: [5, 20, 50, 200]
+  kdj_n: 9
+  kdj_m1: 3
+  kdj_m2: 3
+
+model:
+  lookback_window: 5
+  learning_rate: 0.001
+  epochs: 50
+  batch_size: 32
+  dropout: 0.2
