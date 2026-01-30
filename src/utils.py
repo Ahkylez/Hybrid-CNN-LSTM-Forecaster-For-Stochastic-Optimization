@@ -20,20 +20,22 @@ def load_config(config_path: str="config.yaml") -> dict:
         config = yaml.safe_load(file)
     return config
 
-def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[float, float, float]:
+def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> dict:
     '''
-    Docstring for calculate_metrics
-    
+    Returns a dictonary with useful metrics in determining the quality of the model.
+
     :param y_true: A numpy array of all the true data
     :type y_true: np.ndarray
     :param y_pred: A numpy array of the predictions the model came up with
     :type y_pred: np.ndarray
     :return: Returns the metrics to determine the quality of the model
-    :rtype: tuple[float, float, float]
+    :rtype: dict
     '''
+    # The smaller the better.
+    mse = mean_squared_error(y_true, y_pred)
     # RMSE is more interpetable than MSE so we'll use that
     # Smaller the better
-    rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+    rmse = np.sqrt(mse)
     
     # Error in terms of percentage, again smaller the better.
     mape = mean_absolute_percentage_error(y_true, y_pred) * 100
@@ -41,7 +43,12 @@ def calculate_metrics(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[float, fl
     # How closely the model follows the trend
     r2 = r2_score(y_true, y_pred)
     
-    return rmse, mape, r2
+    return {
+        'MSE': mse,
+        'RMSE': rmse,
+        'MAPE': mape,
+        'R2': r2
+    }
 
 def plot_stock(df: pd.DataFrame) -> None:
     """
@@ -160,18 +167,18 @@ def evaluate_model(test_loader, scaler, model, device):
     inv_actuals = scaler.inverse_transform(dummy_actual)[:, target_col_idx]
 
     # Calculate Metrics
-    rmse, mape, r2 = calculate_metrics(inv_actuals, inv_predictions)
+    metrics = calculate_metrics(inv_actuals, inv_predictions)
     
     print(f"Final Test Metrics:")
-    print(f"RMSE: ${rmse:.2f}")
-    print(f"MAPE: {mape:.2f}%")
-    print(f"R^2:  {r2:.4f}")
+    print(f"RMSE: ${metrics['RMSE']:.2f}")
+    print(f"MAPE: {metrics['MAPE']:.2f}%")
+    print(f"R^2:  {metrics['R2']:.4f}")
 
     # Plot
     plt.figure(figsize=(14, 7))
     plt.plot(inv_actuals, label='Actual Price', color='cyan', alpha=0.7)
     plt.plot(inv_predictions, label='Predicted Price', color='orange', linestyle='--', linewidth=1.5)
-    plt.title(f"Forecast Results | RMSE: ${rmse:.2f} | MAPE: {mape:.2f}% | R²: {r2:.4f}", fontsize=14)
+    plt.title(f"Forecast Results | RMSE: ${metrics['RMSE']:.2f} | MAPE: {metrics['MAPE']:.2f}% | R²: {metrics['R2']:.4f}", fontsize=14)
     plt.xlabel('Days (Test Set)')
     plt.ylabel('Price (USD)')
     plt.legend()
